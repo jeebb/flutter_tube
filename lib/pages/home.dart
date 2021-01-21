@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_tube/features/video_management/models/video.dart';
+import 'package:flutter_tube/features/video_management/services/video_service.dart';
+import 'package:flutter_tube/features/video_management/widgets/video_info_widget.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -6,6 +9,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  bool _fetchingVideos = true;
+  List<VideoInfo> _videoInfoList;
+
+  final _videoService = VideoService();
+
+  @override
+  void initState() {
+    super.initState();
+
+    _fetchVideoList();
+  }
+
+  void _fetchVideoList() async {
+    _videoInfoList = await _videoService.fetchVideoInfoList();
+    setState(() {
+      _fetchingVideos = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
@@ -23,6 +45,7 @@ class _HomePageState extends State<HomePage> {
             IconButton(icon: Icon(Icons.person), onPressed: () {}),
           ],
         ),
+        body: _homeContent(),
         bottomNavigationBar: BottomNavigationBar(
           type: BottomNavigationBarType.fixed,
           items: [
@@ -49,4 +72,22 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       );
+
+  Widget _homeContent() {
+    // show a progress indicator while fetching for the videos
+    if (_fetchingVideos) {
+      return Center(child: CircularProgressIndicator());
+    }
+
+    return ListView(
+      children: _videoInfoList
+          .map(
+            (videoInfo) => Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: VideoInfoWidget(videoInfo: videoInfo),
+            ),
+          )
+          .toList(),
+    );
+  }
 }
